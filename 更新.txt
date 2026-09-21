@@ -1,3 +1,7 @@
+同步指令
 git add .
 git commit -m "新增更新語法檔"
 git push
+
+更名後
+git remote set-url origin 新的儲存庫網址
