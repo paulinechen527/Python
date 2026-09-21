@@ -1,0 +1,19 @@
+同步指令
+git add . #以你電腦的資料夾為準 
+git commit -m "新增更新語法檔"
+git push
+
+更名後
+git remote set-url origin 新的儲存庫網址
+
+git merge --abort #放棄這次卡住的合併#
+git commit -am "保留目前進度" #目前有變動的所有檔案通通先打包好。
+git pull origin main --rebase #升級版的拉取指令。它會強行把雲端的最新檔案抓下來，並把你的電腦修改自動疊加在雲端版本之上。
+git push -u origin main #重新把檔案推上 GitHub
+
+git push -u origin main -f #把電腦的狀態強行洗掉 GitHub 上的狀態
+
+
+***
+開始寫/打開 cmd 時： 先輸入 git pull origin main（確保電腦同步雲端最新的狀態）。
+寫完要存檔/收工時： 再輸入你的黃金三行 git add . -> git commit -> git push。

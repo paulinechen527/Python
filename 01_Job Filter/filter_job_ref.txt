@@ -1,0 +1,30 @@
+# 1. 定義你的 3 個關鍵字篩選條件
+cond1 = "Python"           # 條件一：專業技能（範例）
+cond2 = "0~5人應徵"        # 條件二：競爭人數少（避開萬年砲灰缺）
+cond3 = "小時前聯絡過求職者" # 條件三：企業急著找人（徵才行為極度活躍）
+
+# 2. 模擬抓下來的 104 職缺完整文字資訊（範例資料）
+full_job_info = "台北市大安區軟體工程師，薪資45K以上。必備技能: Python。目前 0~5人應徵。公司於 4 小時前聯絡過求職者·徵才行為活躍。"
+
+# 3. 使用你剛剛提議的 and 語法進行黃金篩選
+if cond1 in full_job_info and cond2 in full_job_info and cond3 in full_job_info:
+    print("🎯 找到符合條件的黃金職缺了！急需人才且競爭極低！")
+else:
+    print("❌ 條件不符，自動過濾。")
+
+
+
+        full_info = f"{job['職稱']} {job['應徵']} {job['活躍度']}"
+    
+    # 進行 3 條件篩選
+    if cond1 in full_info and cond2 in full_info and cond3 in full_info:
+        filtered_jobs.append(job)
+
+# 4. 終極大絕招：直接把結果儲存成 Excel (CSV) 檔案！
+with open("104_急徵黃金職缺.csv", "w", newline="", encoding="utf-8-sig") as f:
+    # 💡 這裡用 utf-8-sig，Excel 打開才不會變亂碼！
+    writer = csv.DictWriter(f, fieldnames=["公司", "職稱", "應徵", "活躍度"])
+    writer.writeheader()  # 寫入第一行的欄位名稱
+    writer.writerows(filtered_jobs)  # 寫入過濾後的職缺
+
+print("🎉 篩選完成！已自動產生 '104_急徵黃金職缺.csv'，你可以用 Excel 打開囉！")
