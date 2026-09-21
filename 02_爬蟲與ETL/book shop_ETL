@@ -1,0 +1,83 @@
+import requests
+from bs4 import BeautifulSoup
+import csv
+import time
+
+# 基礎網址設定
+base_url = "https://books.toscrape.com/"
+rating_map = {"Zero": 0, "One": 1, "Two": 2, "Three": 3, "Four": 4, "Five": 5}
+
+print("🚀 Step 1: 下載書店首頁...")
+response = requests.get(base_url)
+soup = BeautifulSoup(response.text, "html.parser")
+
+# 找出這一頁所有的書
+books = soup.find_all("article", class_="product_pod")
+
+book_links = []
+for book in books:
+    raw_href = book.h3.a["href"]
+    # 確保不論相對路徑長怎樣，都能完美組合成合法的內頁網址
+    if "catalogue/" not in raw_href:
+        detail_url = base_url + "catalogue/" + raw_href
+    else:
+        detail_url = base_url + raw_href
+    book_links.append(detail_url)
+
+print(f"✅ 成功找到 {len(book_links)} 本書的內頁超連結！\n----------------------------------")
+
+clean_data_list = []
+print("🚀 Step 2: 開始進入內頁進行 ETL 清洗 (已修正陣列與亂碼問題)...")
+
+for index, detail_url in enumerate(book_links, start=1):
+    try:
+        time.sleep(0.3)  # 良性爬蟲休息時間
+        detail_response = requests.get(detail_url)
+        detail_response.encoding = "utf-8"  # 強迫使用 utf-8 解碼，防範亂碼 Â
+        
+        detail_soup = BeautifulSoup(detail_response.text, "html.parser")
+        
+        # 1. 萃取書名
+        title = detail_soup.find("div", class_="product_main").h1.text
+        
+        # 2. 修正：萃取星星評等。因為 class 是一個清單 (如 ['star-rating', 'Three'])
+        # 我們必須拿取清單中的第二個元素 (Index 為 1)
+        star_tag = detail_soup.find("p", class_="star-rating")
+        raw_rating = star_tag["class"][1]  # 這才會精準拿到字串 'Three'
+        clean_rating = rating_map.get(raw_rating, 0)
+        
+        # 3. 解析商品詳情表格
+        info_table = detail_soup.find("table", class_="table table-striped")
+        table_data = {row.th.text.strip(): row.td.text.strip() for row in info_table.find_all("tr")}
+        
+        # 4. 【ETL 萬用清洗】建立只留下數字和小數點的強效防禦機制
+        def keep_only_numbers(text_with_noise):
+            return "".join([c for c in text_with_noise if c.isdigit() or c == '.'])
+        
+        price_excl_tax = float(keep_only_numbers(table_data["Price (excl. tax)"]))
+        price_incl_tax = float(keep_only_numbers(table_data["Price (incl. tax)"]))
+        tax = float(keep_only_numbers(table_data["Tax"]))
+        reviews = int(keep_only_numbers(table_data["Number of reviews"]))
+        
+        # 5. 清洗庫存數量
+        stock_qty = int(keep_only_numbers(table_data["Availability"]))
+        
+        print(f"[{index}/20] 成功洗淨資料 📖 {title[:12]}... | 💰 稅後價: {price_incl_tax} | ⭐ 星星: {clean_rating} | 📦 庫存: {stock_qty}")
+        
+        clean_data_list.append({
+            "書名": title, "星星評等": clean_rating, "不含稅價格": price_excl_tax,
+            "含稅價格": price_incl_tax, "稅金": tax, "庫存數量": stock_qty, "評論數": reviews
+        })
+    except Exception as e:
+        print(f"❌ 處理第 {index} 本書時發生錯誤: {e}")
+
+print("----------------------------------\n🚀 Step 3: 正在將乾淨的資料載入至 CSV...")
+csv_headers = ["書名", "星星評等", "不含稅價格", "含稅價格", "稅金", "庫存數量", "評論數"]
+
+with open("書店進階分析資料.csv", "w", newline="", encoding="utf-8-sig") as f:
+    writer = csv.DictWriter(f, fieldnames=csv_headers)
+    writer.writeheader()
+    writer.writerows(clean_data_list)
+
+print("\n🎉 大功告成！'書店進階分析資料.csv' 完美產出！")
+
