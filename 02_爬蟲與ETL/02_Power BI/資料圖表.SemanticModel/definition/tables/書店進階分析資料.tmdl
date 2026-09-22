@@ -1,0 +1,79 @@
+table 書店進階分析資料
+	lineageTag: 25ffc8f2-9d79-4037-9eb4-0015c2cf79ef
+
+	column 書名
+		dataType: string
+		lineageTag: d5d55fe3-6012-4af0-a831-92f18274c855
+		summarizeBy: none
+		sourceColumn: 書名
+
+		annotation SummarizationSetBy = Automatic
+
+	column 星星評等
+		dataType: int64
+		formatString: 0
+		lineageTag: 385cb022-12a5-4c9e-bc5a-e95425b72bba
+		summarizeBy: none
+		sourceColumn: 星星評等
+
+		annotation SummarizationSetBy = User
+
+	column 不含稅價格
+		dataType: double
+		lineageTag: 542f6387-6659-4ded-bd4f-43b05da646cc
+		summarizeBy: none
+		sourceColumn: 不含稅價格
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 含稅價格
+		dataType: double
+		lineageTag: d61cd95a-5802-4ca9-b0a7-4b27e2cbdcdf
+		summarizeBy: none
+		sourceColumn: 含稅價格
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 稅金
+		dataType: int64
+		formatString: 0
+		lineageTag: b8fab8b7-d165-4571-bf5a-757422c5d388
+		summarizeBy: sum
+		sourceColumn: 稅金
+
+		annotation SummarizationSetBy = Automatic
+
+	column 庫存數量
+		dataType: int64
+		formatString: 0
+		lineageTag: 6fb25529-b480-471e-96e2-c92decb74f63
+		summarizeBy: none
+		sourceColumn: 庫存數量
+
+		annotation SummarizationSetBy = User
+
+	column 評論數
+		dataType: int64
+		formatString: 0
+		lineageTag: 2c88518c-3618-4977-a005-d883ef56ee7f
+		summarizeBy: sum
+		sourceColumn: 評論數
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 書店進階分析資料 = m
+		mode: import
+		source =
+				let
+				    來源 = Csv.Document(File.Contents("C:\Users\chiam\Documents\MyPython\02_爬蟲與ETL\01_data\書店進階分析資料.csv"),[Delimiter=",", Columns=7, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+				    已將標頭升階 = Table.PromoteHeaders(來源, [PromoteAllScalars=true]),
+				    已變更類型 = Table.TransformColumnTypes(已將標頭升階,{{"書名", type text}, {"星星評等", Int64.Type}, {"不含稅價格", type number}, {"含稅價格", type number}, {"稅金", Int64.Type}, {"庫存數量", Int64.Type}, {"評論數", Int64.Type}})
+				in
+				    已變更類型
+
+	annotation PBI_ResultType = Table
+
